@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+    />
+    <link rel="stylesheet" href="assets/css/styles.css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Dei_HUD</title>
+  </head>
+  <body>
+    <div class="container">
+      <header id="header">
+        <div id="logo">
+          <img src="assets/img/logo.png" alt="Logo" class="rotating" />
+        </div>
+        <div id="right-panel">
+          <div>
+            <div class="icon-circle">
+              <i class="fas fa-id-card"></i>
+            </div>
+            <p class="id text-container">0</p>
+          </div>
+        </div>
+        <div id="left-panel">
+          <div>
+            <div class="icon-circle">
+              <i class="fas fa-heartbeat"></i>
+            </div>
+            <p class="health text-container">100</p>
+          </div>
+          <div>
+            <div class="icon-circle">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <p class="armor text-container">0</p>
+          </div>
+          <div>
+            <div class="icon-circle">
+              <i class="fas fa-bolt"></i>
+            </div>
+            <p class="stamina text-container">100</p>
+          </div>
+          <div>
+            <div class="icon-circle">
+              <i class="fas fa-tint"></i>
+            </div>
+            <p class="thirst text-container">100</p>
+          </div>
+          <div>
+            <div class="icon-circle">
+              <i class="fas fa-hamburger"></i>
+            </div>
+            <p class="hunger text-container">100</p>
+          </div>
+        </div>
+        <div class="speedo">
+          <span class="speed text-container">100</span
+          ><span class="velocidadkmh text-container"></span>
+          <div class="icon-speedo">
+            <div class="engine">
+              <i class="fas fa-car"></i>
+            </div>
+            <div class="lights">
+              <i class="fas fa-lightbulb"></i>
+            </div>
+          </div>
+          <div class="loadbar">
+            <div class="progressBar"></div>
+          </div>
+        </div>
+      </header>
+    </div>
+    <script src="assets/js/app.js"></script>
+  </body>
+</html>
