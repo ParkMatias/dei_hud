@@ -10,6 +10,15 @@ $(function () {
         $(".stamina").text(`${v.stamina}`);
         $(".thirst").text(`${v.thirst}`);
         $(".hunger").text(`${v.hunger}`);
+        if (v.job) {
+          $(".job").text(`${v.job}`);
+        }
+        else {
+          $(".jobrp").css("display", "none");
+        }
+        if (v.map) {
+          $("#left-panel").css("left", "30vh");
+        }
         break;
       case "hideHud":
         $(".container").fadeOut();
@@ -19,17 +28,11 @@ $(function () {
         $(".speed").text(`${v.speed}`);
         $(".progressBar").css("width", `${v.fuel}`);
         break;
-      case "showLights":
-        $(".lights").css("color", "yellow");
-        break;
-      case "hideLights":
-        $(".lights").css("color", "white");
-        break;
-      case "showEngine":
-        $(".engine").css("color", "white");
-        break;
-      case "hideEngine":
-        $(".engine").css("color", "red");
+      case "vehicleStatus":
+        const enginecolor = v.engine == 1 ? "green" : "red";
+        const lightcolor = v.light == 1 ? "green" : "red";
+        $(".engine").css("color", enginecolor);
+        $(".light").css("color", lightcolor);
         break;
       case "hideSpeed":
         $(".speedo").fadeOut();

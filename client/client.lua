@@ -1,5 +1,5 @@
 local ESX = exports["es_extended"]:getSharedObject()
-local playerid, health, armor, stamina, thirst, hunger, speed, fuel
+local playerid, health, armor, stamina, thirst, hunger, speed, fuel, map
 local show = true
 
 AddEventHandler('onResourceStart', function(resource)
@@ -43,14 +43,9 @@ function ActualizarHud()
     Citizen.CreateThread(function()
         while true do
             if show and not IsPauseMenuActive() then
-                if Config.UseMap then
-                    DisplayRadar(true)
-                else
-                    DisplayRadar(false)
-                end
                 local ped = GetPlayerPed(-1)
-
                 if IsPedValid(ped) then
+                    map = Config.UseMap
                     playerid = GetPlayerServerId(PlayerId())
                     health = GetEntityHealth(ped) / 2
                     armor = GetPedArmour(ped)
@@ -63,45 +58,50 @@ function ActualizarHud()
                     TriggerEvent('esx_status:getStatus', 'hunger', function(status)
                         hunger = math.floor(status.getPercent())
                     end)
+                    
+                    DisplayRadar(Config.UseMap)
 
-                    SendNUIMessage({
-                        action = 'showHud',
-                        playerid = playerid,
-                        health = health,
-                        armor = armor,
-                        stamina = stamina,
-                        thirst = thirst,
-                        hunger = hunger
-                    })
+                    if Config.ShowJob then
+                        local job = ESX.GetPlayerData().job.label
+                        SendNUIMessage({
+                            action = 'showHud',
+                            health = health,
+                            armor = armor,
+                            stamina = stamina,
+                            thirst = thirst,
+                            hunger = hunger,
+                            job = job,
+                            playerid = playerid,
+                            map = map
+                        })
+                    else
+                        SendNUIMessage({
+                            action = 'showHud',
+                            health = health,
+                            armor = armor,
+                            stamina = stamina,
+                            thirst = thirst,
+                            hunger = hunger,
+                            playerid = playerid
+                        })
+                    end
 
                     if IsPedInAnyVehicle(ped, false) then
                         local vehicle = GetVehiclePedIsIn(ped, false)
-
+                        local fuel = GetVehicleFuelLevel(vehicle)
                         speed = math.floor(GetEntitySpeed(vehicle) * 3.6)
                         SendNUIMessage({
                             action = 'showSpeed',
                             speed = speed,
                             fuel = fuel
                         })
-                        if GetVehicleLightsState(vehicle) == 1 then
-                            SendNUIMessage({
-                                action = 'showLights',
-                            })
-                        else
-                            SendNUIMessage({
-                                action = 'hideLights',
-                            })
-                        end
-
-                        if GetIsVehicleEngineRunning(vehicle) then
-                            SendNUIMessage({
-                                action = 'showEngine',
-                            })
-                        else
-                            SendNUIMessage({
-                                action = 'hideEngine',
-                            })
-                        end
+                        local lights = GetVehicleLightsState(vehicle)
+                        local engine = GetIsVehicleEngineRunning(vehicle)
+                        SendNUIMessage({
+                            action = 'vehicleStatus',
+                            lights = lights,
+                            engine = engine
+                        })
                     else
                         SendNUIMessage({
                             action = 'hideSpeed',
