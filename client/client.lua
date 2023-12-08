@@ -43,7 +43,11 @@ function ActualizarHud()
     Citizen.CreateThread(function()
         while true do
             if show and not IsPauseMenuActive() then
-                DisplayRadar(false)
+                if Config.UseMap then
+                    DisplayRadar(true)
+                else
+                    DisplayRadar(false)
+                end
                 local ped = GetPlayerPed(-1)
 
                 if IsPedValid(ped) then
