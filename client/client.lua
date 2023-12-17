@@ -66,11 +66,11 @@ Citizen.CreateThread(function()
         Wait(1000)
         if IsPedInAnyVehicle(PlayerPedId(), false) and Config.OnVehicleMap then
             SendNUIMessage({
-                action = 'showSpeed', map = true})
+                action = 'showSpeed', map = true })
             inVeh = true
             DisplayRadar(true)
         else
-            SendNUIMessage({action = 'hideSpeed', map = false})
+            SendNUIMessage({ action = 'hideSpeed', map = false })
             inVeh = false
             DisplayRadar(false)
         end
@@ -138,3 +138,16 @@ CruiseControl = function()
         })
     end
 end
+
+Citizen.CreateThread(function()
+    local minimap = RequestScaleformMovie("minimap")
+    SetRadarBigmapEnabled(true, false)
+    Wait(0)
+    SetRadarBigmapEnabled(false, false)
+    while true do
+        Wait(0)
+        BeginScaleformMovieMethod(minimap, "SETUP_HEALTH_ARMOUR")
+        ScaleformMovieMethodAddParamInt(3)
+        EndScaleformMovieMethod()
+    end
+end)
