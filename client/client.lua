@@ -1,4 +1,3 @@
-local ESX = exports["es_extended"]:getSharedObject()
 local playerid, health, armor, stamina, thirst, hunger, map
 local show, inVeh = true, false
 
@@ -14,30 +13,23 @@ TurnEngine = function()
     end
 end
 
-
 Citizen.CreateThread(function()
     while true do
         Wait(500)
         if show and not IsPauseMenuActive() then
             local ped = GetPlayerPed(-1)
             if DoesEntityExist(ped) then
-                map = Config.UseMap
                 playerid = GetPlayerServerId(PlayerId())
                 health = GetEntityHealth(ped) / 2
                 armor = GetPedArmour(ped)
                 stamina = math.floor(100 - GetPlayerSprintStaminaRemaining(PlayerId()))
+                thirst, hunger = lib.GetStats()
 
-                TriggerEvent('esx_status:getStatus', 'thirst', function(status)
-                    thirst = math.floor(status.getPercent())
-                end)
+                if Config.UseMap then
+                    DisplayRadar(true)
+                end
 
-                TriggerEvent('esx_status:getStatus', 'hunger', function(status)
-                    hunger = math.floor(status.getPercent())
-                end)
-
-                DisplayRadar(Config.UseMap)
                 if Config.ShowJob then
-                    local job = ESX.GetPlayerData().job.label
                     SendNUIMessage({
                         action = 'showHud',
                         health = health,
@@ -45,9 +37,9 @@ Citizen.CreateThread(function()
                         stamina = stamina,
                         thirst = thirst,
                         hunger = hunger,
-                        job = job,
+                        job = lib.GetJob(),
                         playerid = playerid,
-                        map = map
+                        map = Config.UseMap
                     })
                 else
                     SendNUIMessage({
@@ -72,16 +64,15 @@ end)
 Citizen.CreateThread(function()
     while true do
         Wait(1000)
-        if IsPedInAnyVehicle(PlayerPedId(), false) then
+        if IsPedInAnyVehicle(PlayerPedId(), false) and Config.OnVehicleMap then
+            SendNUIMessage({
+                action = 'showSpeed', map = true})
             inVeh = true
-            SendNUIMessage({
-                action = 'showSpeed'
-            })
+            DisplayRadar(true)
         else
+            SendNUIMessage({action = 'hideSpeed', map = false})
             inVeh = false
-            SendNUIMessage({
-                action = 'hideSpeed',
-            })
+            DisplayRadar(false)
         end
     end
 end)
@@ -120,7 +111,7 @@ end, false)
 RegisterCommand('hud', function()
     show = not show
     local status = show and "activado" or "desactivado"
-    ESX.ShowNotification("Se ha " .. status .. " el HUD.")
+    lib.ShowNotification("Se ha " .. status .. " el HUD.")
 end, false)
 
 RegisterKeyMapping('CruiseControl', 'Activar/Desactivar el control de crucero', 'keyboard', Config.CruiseControl)

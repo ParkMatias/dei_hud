@@ -24,9 +24,15 @@ $(function () {
         break;
       case "showSpeed":
         $(".speedo").fadeIn();
+        if (v.map) {
+          $("#left-panel").css("left", "30vh");
+        }
         break;
       case "hideSpeed":
         $(".speedo").fadeOut();
+        if (!v.map) {
+          $("#left-panel").css("left", "1.5vh");
+        }
         break;
       case "vehicleStatus":
         const enginecolor = v.engine == 1 ? "white" : "red";
