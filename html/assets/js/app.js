@@ -12,8 +12,7 @@ $(function () {
         $(".hunger").text(`${v.hunger}`);
         if (v.job) {
           $(".job").text(`${v.job}`);
-        }
-        else {
+        } else {
           $(".jobrp").css("display", "none");
         }
         if (v.map) {
@@ -25,17 +24,26 @@ $(function () {
         break;
       case "showSpeed":
         $(".speedo").fadeIn();
-        $(".speed").text(`${v.speed}`);
-        $(".progressBar").css("width", `${v.fuel}`);
-        break;
-      case "vehicleStatus":
-        const enginecolor = v.engine == 1 ? "green" : "red";
-        const lightcolor = v.light == 1 ? "green" : "red";
-        $(".engine").css("color", enginecolor);
-        $(".light").css("color", lightcolor);
         break;
       case "hideSpeed":
         $(".speedo").fadeOut();
+        break;
+      case "vehicleStatus":
+        const enginecolor = v.engine == 1 ? "white" : "red";
+        const lightcolor = v.light == 1 ? "white" : "red";
+        $(".speed").text(`${v.speed}`);
+        $(".engine").css("color", enginecolor);
+        $(".light").css("color", lightcolor);
+        $(".progressBar").css("width", `${v.rpm}`);
+        break;
+      case "cruiseControl":
+        const cruise = v.cruise == 1 ? "white" : "red";
+        $(".limiter").css("color", cruise);
+        break;
+      case "toggleColor":
+        $(".icon-circle").css("background-color", $(".icon-circle").css("background-color") === 'rgb(0, 0, 0)' ? 'white' : 'black');
+        $("#left-panel div i").css("color", $("#left-panel div i").css("color") === 'rgb(255, 255, 255)' ? 'black' : 'white');
+        $("#right-panel div i").css("color", $("#right-panel div i").css("color") === 'rgb(255, 255, 255)' ? 'black' : 'white');
         break;
     }
   });
