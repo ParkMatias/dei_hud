@@ -1,15 +1,24 @@
-local playerid, health, armor, stamina, thirst, hunger, map
+local playerid, health, armor, stamina, thirst, hunger, map, job
 local show, inVeh = true, false
+
+AddEventHandler('onResourceStart', function(resource)
+    if resource == GetCurrentResourceName() then
+        if Config.Framework == 'esx' then
+            ESX = exports['es_extended']:getSharedObject()
+        elseif Config.Framework == 'qb' then
+            QBCore = exports['qb-core']:GetCoreObject()
+        else
+            print('Framework not found')
+            return
+        end
+    end
+end)
 
 TurnEngine = function()
     local ped = GetPlayerPed(-1)
     local vehicle = GetVehiclePedIsIn(ped, false)
     if inVeh and IsPedInAnyVehicle(ped, false) then
-        if GetIsVehicleEngineRunning(vehicle) then
-            SetVehicleEngineOn(vehicle, false, false, true)
-        else
-            SetVehicleEngineOn(vehicle, true, false, true)
-        end
+        SetVehicleEngineOn(vehicle, not GetIsVehicleEngineRunning(vehicle), false, true)
     end
 end
 
@@ -23,13 +32,27 @@ Citizen.CreateThread(function()
                 health = GetEntityHealth(ped) / 2
                 armor = GetPedArmour(ped)
                 stamina = math.floor(100 - GetPlayerSprintStaminaRemaining(PlayerId()))
-                thirst, hunger = lib.GetStats()
 
-                if Config.UseMap then
-                    DisplayRadar(true)
+                if Config.Framework == 'esx' then
+                    TriggerEvent('esx_status:getStatus', 'thirst', function(status)
+                        thirst = math.floor(status.getPercent())
+                    end)
+                    TriggerEvent('esx_status:getStatus', 'hunger', function(status)
+                        hunger = math.floor(status.getPercent())
+                    end)
+                elseif Config.Framework == 'qb' then
+                    thirst = math.floor(QBCore.Functions.GetPlayerData().metadata['thirst'])
+                    hunger = math.floor(QBCore.Functions.GetPlayerData().metadata['hunger'])
                 end
 
+                if Config.UseMap then DisplayRadar(true) end
+
                 if Config.ShowJob then
+                    if Config.Framework == 'esx' then
+                        job = ESX.PlayerData.job.label
+                    elseif Config.Framework == 'qb' then
+                        job = QBCore.Functions.GetPlayerData().job.label
+                    end
                     SendNUIMessage({
                         action = 'showHud',
                         health = health,
@@ -37,7 +60,7 @@ Citizen.CreateThread(function()
                         stamina = stamina,
                         thirst = thirst,
                         hunger = hunger,
-                        job = lib.GetJob(),
+                        job = job,
                         playerid = playerid,
                         map = Config.UseMap
                     })
@@ -66,11 +89,16 @@ Citizen.CreateThread(function()
         Wait(1000)
         if IsPedInAnyVehicle(PlayerPedId(), false) and Config.OnVehicleMap then
             SendNUIMessage({
-                action = 'showSpeed', map = true })
+                action = 'showSpeed',
+                map = true
+            })
             inVeh = true
             DisplayRadar(true)
         else
-            SendNUIMessage({ action = 'hideSpeed', map = false })
+            SendNUIMessage({
+                action = 'hideSpeed',
+                map = false
+            })
             inVeh = false
             DisplayRadar(false)
         end
@@ -98,26 +126,26 @@ Citizen.CreateThread(function()
 end)
 
 RegisterKeyMapping('TurnEngine', 'Apagar el motor del vehiculo', 'keyboard', Config.TurnEngine)
-RegisterCommand('TurnEngine', function()
-    TurnEngine()
-end, false)
+RegisterCommand('TurnEngine', TurnEngine, false)
 
-RegisterCommand('togglecolor', function()
-    SendNUIMessage({
-        action = 'toggleColor',
-    })
-end, false)
+RegisterCommand('togglecolor', function() SendNUIMessage({ action = 'toggleColor', }) end, false)
 
 RegisterCommand('hud', function()
     show = not show
     local status = show and "activado" or "desactivado"
-    lib.ShowNotification("Se ha " .. status .. " el HUD.")
+    ShowNotification("Se ha " .. status .. " el HUD.")
 end, false)
 
+ShowNotification = function(msg)
+    if Config.Framework == 'esx' then
+        ESX.ShowNotification(msg)
+    elseif Config.Framework == 'qb' then
+        QBCore.Functions.Notify(msg)
+    end
+end
+
 RegisterKeyMapping('CruiseControl', 'Activar/Desactivar el control de crucero', 'keyboard', Config.CruiseControl)
-RegisterCommand("CruiseControl", function()
-    CruiseControl()
-end, false)
+RegisterCommand("CruiseControl", function() CruiseControl() end, false)
 
 CruiseControl = function()
     local ped = GetPlayerPed(-1)
