@@ -1,18 +1,15 @@
 local playerid, health, armor, stamina, thirst, hunger, map, job
 local show, inVeh = true, false
 
-AddEventHandler('onResourceStart', function(resource)
-    if resource == GetCurrentResourceName() then
-        if Config.Framework == 'esx' then
-            ESX = exports['es_extended']:getSharedObject()
-        elseif Config.Framework == 'qb' then
-            QBCore = exports['qb-core']:GetCoreObject()
-        else
-            print('Framework not found')
-            return
-        end
-    end
-end)
+
+if Config.Framework == 'esx' then
+    ESX = exports['es_extended']:getSharedObject()
+elseif Config.Framework == 'qb' then
+    QBCore = exports['qb-core']:GetCoreObject()
+else
+    print('Framework not found')
+    return
+end
 
 TurnEngine = function()
     local ped = GetPlayerPed(-1)

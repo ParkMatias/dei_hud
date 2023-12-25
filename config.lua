@@ -1,4 +1,4 @@
-Config = {}
+ Config = {}
 
 Config.Framework = 'esx'   -- Framework (esx/qb)
 
