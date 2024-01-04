@@ -1,131 +1,190 @@
-local ESX = exports["es_extended"]:getSharedObject()
-local playerid, health, armor, stamina, thirst, hunger, speed, fuel
-local show = true
+local playerid, health, armor, stamina, thirst, hunger, map, job
+local show, inVeh = true, false
 
-AddEventHandler('onResourceStart', function(resource)
-    if resource == GetCurrentResourceName() then
-        ActualizarHud()
-    end
-end)
 
-RegisterNetEvent('esx:playerLoaded')
-AddEventHandler('esx:playerLoaded', function()
-    ActualizarHud()
-end)
+Citizen.CreateThread(function()
+    while true do
+        Citizen.Wait(0)
 
-RegisterNetEvent('esx:setJob')
-AddEventHandler('esx:setJob', function()
-    ActualizarHud()
-end)
-
-RegisterNetEvent('esx:setAccountMoney')
-AddEventHandler('esx:setAccountMoney', function()
-    ActualizarHud()
-end)
-
-function TurnEngine()
-    local ped = GetPlayerPed(-1)
-    local vehicle = GetVehiclePedIsIn(ped, false)
-    if IsPedInAnyVehicle(ped, false) then
-        if GetIsVehicleEngineRunning(vehicle) then
-            SetVehicleEngineOn(vehicle, false, false, true)
+        if Config.Framework == 'esx' then
+            ESX = exports['es_extended']:getSharedObject()
+            if ESX then
+                break
+            end
+        elseif Config.Framework == 'qb' then
+            QBCore = exports['qb-core']:GetCoreObject()
+            if QBCore then
+                break
+            end
         else
-            SetVehicleEngineOn(vehicle, true, false, true)
+            print('Framework not found')
+            return
         end
     end
+end)
+
+TurnEngine = function()
+    local ped = GetPlayerPed(-1)
+    local vehicle = GetVehiclePedIsIn(ped, false)
+    if inVeh and IsPedInAnyVehicle(ped, false) then
+        SetVehicleEngineOn(vehicle, not GetIsVehicleEngineRunning(vehicle), false, true)
+    end
 end
 
-function IsPedValid(ped)
-    return ped and DoesEntityExist(ped) and not IsEntityDead(ped)
-end
+Citizen.CreateThread(function()
+    while true do
+        Wait(500)
+        if show and not IsPauseMenuActive() then
+            local ped = GetPlayerPed(-1)
+            if DoesEntityExist(ped) then
+                playerid = GetPlayerServerId(PlayerId())
+                health = GetEntityHealth(ped) / 2
+                armor = GetPedArmour(ped)
+                stamina = math.floor(100 - GetPlayerSprintStaminaRemaining(PlayerId()))
 
-function ActualizarHud()
-    Citizen.CreateThread(function()
-        while true do
-            if show and not IsPauseMenuActive() then
-                if Config.UseMap then
-                    DisplayRadar(true)
-                else
-                    DisplayRadar(false)
-                end
-                local ped = GetPlayerPed(-1)
-
-                if IsPedValid(ped) then
-                    playerid = GetPlayerServerId(PlayerId())
-                    health = GetEntityHealth(ped) / 2
-                    armor = GetPedArmour(ped)
-                    stamina = math.floor(100 - GetPlayerSprintStaminaRemaining(PlayerId()))
-
+                if Config.Framework == 'esx' then
                     TriggerEvent('esx_status:getStatus', 'thirst', function(status)
                         thirst = math.floor(status.getPercent())
                     end)
-
                     TriggerEvent('esx_status:getStatus', 'hunger', function(status)
                         hunger = math.floor(status.getPercent())
                     end)
+                elseif Config.Framework == 'qb' then
+                    thirst = math.floor(QBCore.Functions.GetPlayerData().metadata['thirst'])
+                    hunger = math.floor(QBCore.Functions.GetPlayerData().metadata['hunger'])
+                end
 
+                if Config.UseMap then DisplayRadar(true) end
+
+                if Config.ShowJob then
+                    if Config.Framework == 'esx' then
+                        job = ESX.PlayerData.job.label
+                    elseif Config.Framework == 'qb' then
+                        job = QBCore.Functions.GetPlayerData().job.label
+                    end
                     SendNUIMessage({
                         action = 'showHud',
-                        playerid = playerid,
                         health = health,
                         armor = armor,
                         stamina = stamina,
                         thirst = thirst,
-                        hunger = hunger
+                        hunger = hunger,
+                        job = job,
+                        playerid = playerid,
+                        map = Config.UseMap
                     })
-
-                    if IsPedInAnyVehicle(ped, false) then
-                        local vehicle = GetVehiclePedIsIn(ped, false)
-
-                        speed = math.floor(GetEntitySpeed(vehicle) * 3.6)
-                        SendNUIMessage({
-                            action = 'showSpeed',
-                            speed = speed,
-                            fuel = fuel
-                        })
-                        if GetVehicleLightsState(vehicle) == 1 then
-                            SendNUIMessage({
-                                action = 'showLights',
-                            })
-                        else
-                            SendNUIMessage({
-                                action = 'hideLights',
-                            })
-                        end
-
-                        if GetIsVehicleEngineRunning(vehicle) then
-                            SendNUIMessage({
-                                action = 'showEngine',
-                            })
-                        else
-                            SendNUIMessage({
-                                action = 'hideEngine',
-                            })
-                        end
-                    else
-                        SendNUIMessage({
-                            action = 'hideSpeed',
-                        })
-                    end
+                else
+                    SendNUIMessage({
+                        action = 'showHud',
+                        health = health,
+                        armor = armor,
+                        stamina = stamina,
+                        thirst = thirst,
+                        hunger = hunger,
+                        playerid = playerid
+                    })
                 end
-                Citizen.Wait(300)
-            elseif not show or IsPauseMenuActive then
-                SendNUIMessage({
-                    action = 'hideHud',
-                })
             end
-            Citizen.Wait(300)
+        elseif not show or IsPauseMenuActive then
+            SendNUIMessage({
+                action = 'hideHud',
+            })
         end
-    end)
-end
+    end
+end)
+
+Citizen.CreateThread(function()
+    while true do
+        Wait(1000)
+        if IsPedInAnyVehicle(PlayerPedId(), false) and Config.OnVehicleMap then
+            SendNUIMessage({
+                action = 'showSpeed',
+                map = true
+            })
+            inVeh = true
+            DisplayRadar(true)
+        else
+            SendNUIMessage({
+                action = 'hideSpeed',
+                map = false
+            })
+            inVeh = false
+            DisplayRadar(false)
+        end
+    end
+end)
+
+Citizen.CreateThread(function()
+    while true do
+        Wait(100)
+        if inVeh and IsPedInAnyVehicle(PlayerPedId(), false) then
+            local vehicle = GetVehiclePedIsIn(PlayerPedId(), false)
+            local engine = GetIsVehicleEngineRunning(vehicle)
+            local lights = GetVehicleLightsState(vehicle)
+            local rpm = math.floor((GetVehicleCurrentRpm(vehicle) * 100))
+            local speed = math.floor(GetEntitySpeed(vehicle) * 3.6)
+            SendNUIMessage({
+                action = 'vehicleStatus',
+                engine = engine,
+                lights = lights,
+                rpm = rpm,
+                speed = speed
+            })
+        end
+    end
+end)
 
 RegisterKeyMapping('TurnEngine', 'Apagar el motor del vehiculo', 'keyboard', Config.TurnEngine)
-RegisterCommand('TurnEngine', function()
-    TurnEngine()
-end, false)
+RegisterCommand('TurnEngine', TurnEngine, false)
+
+RegisterCommand('togglecolor', function() SendNUIMessage({ action = 'toggleColor', }) end, false)
 
 RegisterCommand('hud', function()
     show = not show
     local status = show and "activado" or "desactivado"
-    ESX.ShowNotification("Se ha " .. status .. " el HUD.")
+    ShowNotification("Se ha " .. status .. " el HUD.")
 end, false)
+
+ShowNotification = function(msg)
+    if Config.Framework == 'esx' then
+        ESX.ShowNotification(msg)
+    elseif Config.Framework == 'qb' then
+        QBCore.Functions.Notify(msg)
+    end
+end
+
+RegisterKeyMapping('CruiseControl', 'Activar/Desactivar el control de crucero', 'keyboard', Config.CruiseControl)
+RegisterCommand("CruiseControl", function() CruiseControl() end, false)
+
+CruiseControl = function()
+    local ped = GetPlayerPed(-1)
+    local vehicle = GetVehiclePedIsIn(ped, false)
+    local isDriver = GetPedInVehicleSeat(vehicle, -1) == ped
+
+    if inVeh and isDriver then
+        if not Cruise then
+            SetVehicleMaxSpeed(vehicle, GetEntitySpeed(vehicle))
+            Cruise = true
+        else
+            Cruise = false
+            SetVehicleMaxSpeed(vehicle, 0.0)
+        end
+        SendNUIMessage({
+            action = 'cruiseControl',
+            cruise = Cruise
+        })
+    end
+end
+
+Citizen.CreateThread(function()
+    local minimap = RequestScaleformMovie("minimap")
+    SetRadarBigmapEnabled(true, false)
+    Wait(0)
+    SetRadarBigmapEnabled(false, false)
+    while true do
+        Wait(0)
+        BeginScaleformMovieMethod(minimap, "SETUP_HEALTH_ARMOUR")
+        ScaleformMovieMethodAddParamInt(3)
+        EndScaleformMovieMethod()
+    end
+end)

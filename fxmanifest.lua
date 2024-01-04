@@ -4,14 +4,10 @@ game 'gta5'
 author 'Dei'
 description 'Simple hud :)'
 version '1.1'
-lua54 'yes'
-
-shared_scripts {
-    'config.lua',
-}
 
 client_scripts {
-    'client/*.lua',
+    'config.lua',
+    'client/*.lua'
 }
 
 ui_page {
