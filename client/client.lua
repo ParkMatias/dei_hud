@@ -1,15 +1,19 @@
 local playerid, health, armor, stamina, thirst, hunger, map, job
 local show, inVeh = true, false
 
-
-if Config.Framework == 'esx' then
-    ESX = exports['es_extended']:getSharedObject()
-elseif Config.Framework == 'qb' then
-    QBCore = exports['qb-core']:GetCoreObject()
-else
-    print('Framework not found')
-    return
-end
+Citizen.CreateThread(function()
+    while true do
+        Wait(0)
+        if Config.Framework == 'esx' then
+            ESX = exports['es_extended']:getSharedObject()
+        elseif Config.Framework == 'qb' then
+            QBCore = exports['qb-core']:GetCoreObject()
+        else
+            print('Framework not found')
+            return
+        end
+    end
+end)
 
 TurnEngine = function()
     local ped = GetPlayerPed(-1)
