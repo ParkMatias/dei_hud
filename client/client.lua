@@ -2,15 +2,12 @@ local playerid, health, armor, stamina, thirst, hunger, map, job
 local show, inVeh = true, false
 
 Citizen.CreateThread(function()
-    while true do
-        Wait(0)
+    while ESX == nil or QBCore == nil do
+        Citizen.Wait(0)
         if Config.Framework == 'esx' then
             ESX = exports['es_extended']:getSharedObject()
         elseif Config.Framework == 'qb' then
             QBCore = exports['qb-core']:GetCoreObject()
-        else
-            print('Framework not found')
-            return
         end
     end
 end)
@@ -50,9 +47,10 @@ Citizen.CreateThread(function()
 
                 if Config.ShowJob then
                     if Config.Framework == 'esx' then
-                        job = ESX.PlayerData.job.label
+                        job = ESX.PlayerData.job and ESX.PlayerData.job.label or 'Unemployed'
                     elseif Config.Framework == 'qb' then
-                        job = QBCore.Functions.GetPlayerData().job.label
+                        local playerData = QBCore.Functions.GetPlayerData()
+                        job = playerData.job and playerData.job.label or 'Unemployed'
                     end
                     SendNUIMessage({
                         action = 'showHud',
